@@ -1,0 +1,37 @@
+{
+  "python": "3.13.16",
+  "commits": 300,
+  "files_compared": 554,
+  "files_skipped_not_valid_for_this_python": 0,
+  "symbols_compared": 28791,
+  "agree_changed": 1167,
+  "agree_unchanged": 27241,
+  "extra_reported_by_us": 383,
+  "missed_by_us": 0,
+  "kind_mismatch": 0,
+  "cosmetic_only_symbols": 72,
+  "recall_of_oracle_changes": 1.0,
+  "median_seconds_per_commit": 0.043,
+  "max_seconds_per_commit": 0.6822,
+  "examples": {
+    "extra": [
+      "661970d171 src/requests/compat.py::<module> (ours: modified)",
+      "f8bec2f7ca tests/test_testserver.py::TestTestServer.test_text_response (ours: modified)",
+      "8112fcc7be requests/models.py::Request.__init__ (ours: modified)",
+      "8112fcc7be requests/models.py::RequestEncodingMixin._encode_files (ours: modified)",
+      "8112fcc7be requests/sessions.py::Session.get_adapter (ours: modified)",
+      "8112fcc7be requests/sessions.py::Session.merge_environment_settings (ours: modified)",
+      "6e5b15d542 requests/sessions.py::SessionRedirectMixin.rebuild_proxies (ours: modified)",
+      "6e5b15d542 tests/test_requests.py::TestRequests.test_proxy_authorization_not_appended_to_https_request (ours: modified)",
+      "2a6f290bc0 requests/__init__.py::_check_cryptography (ours: modified)",
+      "2a6f290bc0 requests/__init__.py::check_compatibility (ours: modified)",
+      "2a6f290bc0 requests/_internal_utils.py::to_native_string (ours: modified)",
+      "2a6f290bc0 requests/_internal_utils.py::unicode_is_ascii (ours: modified)",
+      "2a6f290bc0 requests/adapters.py::HTTPAdapter (ours: modified)",
+      "2a6f290bc0 requests/adapters.py::HTTPAdapter.build_response (ours: modified)",
+      "2a6f290bc0 requests/adapters.py::HTTPAdapter.get_connection (ours: modified)"
+    ],
+    "missed": [],
+    "kind_mismatch": []
+  }
+}

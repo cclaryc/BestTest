@@ -1,0 +1,35 @@
+{
+  "python": "3.13.16",
+  "commits": 300,
+  "files_compared": 686,
+  "files_skipped_not_valid_for_this_python": 0,
+  "symbols_compared": 31139,
+  "agree_changed": 2149,
+  "agree_unchanged": 28977,
+  "extra_reported_by_us": 13,
+  "missed_by_us": 0,
+  "kind_mismatch": 0,
+  "cosmetic_only_symbols": 126,
+  "recall_of_oracle_changes": 1.0,
+  "median_seconds_per_commit": 0.0578,
+  "max_seconds_per_commit": 0.4966,
+  "examples": {
+    "extra": [
+      "165af0a090 src/flask/app.py::Flask.__init__ (ours: modified)",
+      "165af0a090 src/flask/testing.py::EnvironBuilder.__init__ (ours: modified)",
+      "87d5f5b9a9 tests/test_json.py::test_jsonify_uuid_types (ours: modified)",
+      "08d3185e87 src/flask/ctx.py::after_this_request (ours: modified)",
+      "08d3185e87 src/flask/helpers.py::stream_with_context (ours: modified)",
+      "54e05a2824 src/flask/app.py::Flask.do_teardown_appcontext (ours: modified)",
+      "54e05a2824 src/flask/app.py::Flask.do_teardown_request (ours: modified)",
+      "54e05a2824 src/flask/app.py::Flask.make_response (ours: modified)",
+      "54e05a2824 src/flask/helpers.py::stream_with_context (ours: modified)",
+      "54e05a2824 src/flask/sansio/app.py::App.redirect (ours: modified)",
+      "aa040c085c src/flask/templating.py::render_template (ours: modified)",
+      "aa040c085c src/flask/templating.py::stream_template (ours: modified)",
+      "190dd4df86 src/flask/app.py::Flask.make_response (ours: modified)"
+    ],
+    "missed": [],
+    "kind_mismatch": []
+  }
+}

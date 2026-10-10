@@ -1,0 +1,37 @@
+{
+  "python": "3.13.16",
+  "commits": 300,
+  "files_compared": 688,
+  "files_skipped_not_valid_for_this_python": 0,
+  "symbols_compared": 47476,
+  "agree_changed": 2673,
+  "agree_unchanged": 44787,
+  "extra_reported_by_us": 16,
+  "missed_by_us": 0,
+  "kind_mismatch": 0,
+  "cosmetic_only_symbols": 148,
+  "recall_of_oracle_changes": 1.0,
+  "median_seconds_per_commit": 0.095,
+  "max_seconds_per_commit": 0.5441,
+  "examples": {
+    "extra": [
+      "9a2d169fcf src/click/types.py::FuncParamTypeInfoDict (ours: modified)",
+      "5b9630f50f src/click/types.py::File.convert (ours: modified)",
+      "b64ea07128 tests/test_options.py::test_usage_show_choices (ours: modified)",
+      "b64ea07128 tests/test_options.py::test_usage_show_choices.<locals>.cli_without_choices (ours: modified)",
+      "f14b75063f src/click/core.py::Command.invoke (ours: modified)",
+      "f14b75063f src/click/core.py::Group.command#3 (ours: modified)",
+      "f14b75063f src/click/core.py::Group.group#3 (ours: modified)",
+      "f14b75063f tests/test_arguments.py::test_bytes_args (ours: modified)",
+      "f14b75063f tests/test_arguments.py::test_bytes_args.<locals>.from_bytes (ours: modified)",
+      "f14b75063f tests/test_utils.py::test_echo_via_pager (ours: modified)",
+      "525c5f1f28 src/click/core.py::BaseCommand.make_context (ours: modified)",
+      "525c5f1f28 src/click/core.py::Context.__init__ (ours: modified)",
+      "525c5f1f28 src/click/exceptions.py::_join_param_hints (ours: modified)",
+      "9cf4e6429e src/click/core.py::Context.invoke (ours: modified)",
+      "9cf4e6429e src/click/core.py::Context.invoke#2 (ours: modified)"
+    ],
+    "missed": [],
+    "kind_mismatch": []
+  }
+}
