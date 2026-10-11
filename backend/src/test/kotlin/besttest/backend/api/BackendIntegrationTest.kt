@@ -2,8 +2,6 @@ package besttest.backend.api
 
 import besttest.backend.support.Fixtures
 import besttest.backend.support.StubAnalysisServer
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -13,8 +11,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.resttestclient.TestRestTemplate
+import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
@@ -24,6 +23,8 @@ import org.springframework.http.ResponseEntity
 import org.springframework.jdbc.core.simple.JdbcClient
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
+import tools.jackson.databind.JsonNode
+import tools.jackson.databind.ObjectMapper
 
 /**
  * The whole backend, started for real: HTTP server, validation, error
@@ -35,6 +36,7 @@ import org.springframework.test.context.DynamicPropertySource
  * the table.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@AutoConfigureTestRestTemplate
 class BackendIntegrationTest {
     @Autowired
     private lateinit var rest: TestRestTemplate
@@ -60,22 +62,22 @@ class BackendIntegrationTest {
 
         assertEquals(201, response.statusCode.value())
         val body = json(response)
-        val id = body.path("id").asText()
+        val id = body.path("id").asString()
         assertEquals("/api/analyses/$id", response.headers.location?.toString())
-        assertEquals("succeeded", body.path("status").asText())
+        assertEquals("succeeded", body.path("status").asString())
         assertEquals(true, body.path("complete").asBoolean())
         assertEquals(1, body.path("file_count").asInt())
         assertEquals(4, body.path("symbol_count").asInt())
-        assertEquals("shop/pricing.py", body.path("result").path("files").path(0).path("path").asText())
-        assertEquals(Fixtures.BASE_COMMIT, body.path("base").path("commit").asText())
-        assertEquals("head", body.path("head").path("snapshot").asText())
+        assertEquals("shop/pricing.py", body.path("result").path("files").path(0).path("path").asString())
+        assertEquals(Fixtures.BASE_COMMIT, body.path("base").path("commit").asString())
+        assertEquals("head", body.path("head").path("snapshot").asString())
         assertFalse(body.has("error"))
 
         // What the analysis service was sent.
         val sent = analysis.received.single()
         assertEquals("/v1/changed-symbols", sent.path)
         assertEquals("it-roundtrip", sent.requestId, "the request id must travel to the analysis service")
-        assertEquals(Fixtures.exampleDiff, objectMapper.readTree(sent.body).path("diff").asText())
+        assertEquals(Fixtures.exampleDiff, objectMapper.readTree(sent.body).path("diff").asString())
 
         // What is in the database.
         val row = jdbc.sql(
@@ -90,15 +92,15 @@ class BackendIntegrationTest {
 
     @Test
     fun `a stored analysis can be fetched and appears in the list without its result`() {
-        val id = json(post(validBody())).path("id").asText()
+        val id = json(post(validBody())).path("id").asString()
 
         val fetched = json(get("/api/analyses/$id"))
         val listed = json(get("/api/analyses"))
 
-        assertEquals(id, fetched.path("id").asText())
+        assertEquals(id, fetched.path("id").asString())
         assertEquals(4, fetched.path("result").path("files").path(0).path("symbols").size())
         assertEquals(1, listed.size())
-        assertEquals(id, listed.path(0).path("id").asText())
+        assertEquals(id, listed.path(0).path("id").asString())
         assertFalse(listed.path(0).has("result"), "the list must stay small")
     }
 
@@ -117,10 +119,10 @@ class BackendIntegrationTest {
 
         assertEquals(201, response.statusCode.value())
         val body = json(response)
-        assertEquals("failed", body.path("status").asText())
-        assertEquals("snapshot_not_found", body.path("error").path("code").asText())
+        assertEquals("failed", body.path("status").asString())
+        assertEquals("snapshot_not_found", body.path("error").path("code").asString())
         assertFalse(body.has("result"))
-        assertEquals("failed", statusInDatabase(body.path("id").asText()))
+        assertEquals("failed", statusInDatabase(body.path("id").asString()))
     }
 
     @Test
@@ -129,8 +131,8 @@ class BackendIntegrationTest {
 
         val body = json(post(validBody()))
 
-        assertEquals("failed", body.path("status").asText())
-        assertEquals("analysis_unavailable", body.path("error").path("code").asText())
+        assertEquals("failed", body.path("status").asString())
+        assertEquals("analysis_unavailable", body.path("error").path("code").asString())
         assertEquals(200, get("/actuator/health/readiness").statusCode.value())
     }
 
@@ -144,9 +146,9 @@ class BackendIntegrationTest {
 
         assertEquals(400, response.statusCode.value())
         val problem = problem(response)
-        assertEquals("invalid_request", problem.path("code").asText())
-        assertEquals("it-invalid", problem.path("request_id").asText())
-        assertEquals("base.commit", problem.path("errors").path(0).path("location").asText())
+        assertEquals("invalid_request", problem.path("code").asString())
+        assertEquals("it-invalid", problem.path("request_id").asString())
+        assertEquals("base.commit", problem.path("errors").path(0).path("location").asString())
         assertFalse(response.body.orEmpty().contains("diff --git"), "the rejected input must not be echoed")
         assertEquals(0, rowCount())
         assertTrue(analysis.received.isEmpty())
@@ -157,14 +159,14 @@ class BackendIntegrationTest {
         val response = post(validBody().replace("\"snapshot\":\"head\"", "\"snapshot\":\"../etc\""))
 
         assertEquals(400, response.statusCode.value())
-        assertEquals("head.snapshot", problem(response).path("errors").path(0).path("location").asText())
+        assertEquals("head.snapshot", problem(response).path("errors").path(0).path("location").asString())
         assertTrue(analysis.received.isEmpty())
     }
 
     @Test
     fun `a body that is not json or lacks a field is refused`() {
-        assertEquals("invalid_request", problem(post("{not json")).path("code").asText())
-        assertEquals("invalid_request", problem(post("""{"diff":""}""")).path("code").asText())
+        assertEquals("invalid_request", problem(post("{not json")).path("code").asString())
+        assertEquals("invalid_request", problem(post("""{"diff":""}""")).path("code").asString())
         assertEquals(0, rowCount())
     }
 
@@ -174,9 +176,9 @@ class BackendIntegrationTest {
         val malformed = get("/api/analyses/not-a-uuid")
 
         assertEquals(404, missing.statusCode.value())
-        assertEquals("analysis_not_found", problem(missing).path("code").asText())
+        assertEquals("analysis_not_found", problem(missing).path("code").asString())
         assertEquals(400, malformed.statusCode.value())
-        assertEquals("invalid_request", problem(malformed).path("code").asText())
+        assertEquals("invalid_request", problem(malformed).path("code").asString())
     }
 
     @Test
@@ -184,7 +186,7 @@ class BackendIntegrationTest {
         val response = rest.exchange("/api/analyses", HttpMethod.DELETE, HttpEntity.EMPTY, String::class.java)
 
         assertEquals(405, response.statusCode.value())
-        assertEquals("method_not_allowed", problem(response).path("code").asText())
+        assertEquals("method_not_allowed", problem(response).path("code").asString())
     }
 
     @Test
@@ -233,7 +235,7 @@ class BackendIntegrationTest {
         val response = get("/actuator/health/readiness")
 
         assertEquals(200, response.statusCode.value())
-        assertEquals("UP", json(response).path("status").asText())
+        assertEquals("UP", json(response).path("status").asString())
     }
 
     // --- helpers ----------------------------------------------------------
@@ -270,7 +272,7 @@ class BackendIntegrationTest {
         )
         val body = json(response)
         assertEquals(response.statusCode.value(), body.path("status").asInt())
-        assertEquals(response.headers.getFirst("X-Request-ID"), body.path("request_id").asText())
+        assertEquals(response.headers.getFirst("X-Request-ID"), body.path("request_id").asString())
         return body
     }
 

@@ -5,13 +5,13 @@ import besttest.backend.analysis.Revision
 import besttest.backend.analysis.SNAPSHOT_PATTERN
 import besttest.backend.jobs.AnalysisRun
 import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.validation.Valid
 import jakarta.validation.constraints.Pattern
 import jakarta.validation.constraints.Size
 import java.time.OffsetDateTime
 import java.util.UUID
+import tools.jackson.databind.JsonNode
+import tools.jackson.databind.ObjectMapper
 
 /** Largest diff accepted, in characters. Just under the analysis service's own 8 MiB body limit. */
 const val MAX_DIFF_CHARS = 6_000_000

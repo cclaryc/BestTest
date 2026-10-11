@@ -60,9 +60,9 @@ class HttpAnalysisClientTest {
         assertEquals("req-42", received.requestId)
         assertTrue(received.contentType.orEmpty().startsWith("application/json"), "content type: ${received.contentType}")
         val sent = Fixtures.mapper.readTree(received.body)
-        assertEquals(Fixtures.BASE_COMMIT, sent.path("base").path("commit").asText())
-        assertEquals("head", sent.path("head").path("snapshot").asText())
-        assertEquals(Fixtures.exampleDiff, sent.path("diff").asText())
+        assertEquals(Fixtures.BASE_COMMIT, sent.path("base").path("commit").asString())
+        assertEquals("head", sent.path("head").path("snapshot").asString())
+        assertEquals(Fixtures.exampleDiff, sent.path("diff").asString())
     }
 
     @Test

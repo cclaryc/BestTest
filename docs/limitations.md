@@ -109,11 +109,6 @@ fetches both from GitHub and the client only names a pull request.
 by validation, after the whole body has been read into memory. Nothing caps the
 body before that.
 
-**Spring Boot 3.5 is past its free support period.** It was chosen because the
-first version of the backend was written without a compiler, and that called for
-the API its author knew exactly. Moving to the current 4.x line is the first
-follow-up.
-
 **The contract classes are written by hand.** A test compares them with
 `openapi.json` for field names, required fields, nullability and patterns. It
 does not compare value types (string versus integer), so a type change on the

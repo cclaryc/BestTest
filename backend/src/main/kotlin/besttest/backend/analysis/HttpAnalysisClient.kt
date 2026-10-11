@@ -1,7 +1,5 @@
 package besttest.backend.analysis
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import java.io.IOException
 import java.net.http.HttpClient
 import org.springframework.http.HttpStatusCode
 import org.springframework.http.MediaType
@@ -10,6 +8,8 @@ import org.springframework.http.client.JdkClientHttpRequestFactory
 import org.springframework.stereotype.Component
 import org.springframework.web.client.ResourceAccessException
 import org.springframework.web.client.RestClient
+import tools.jackson.core.JacksonException
+import tools.jackson.databind.ObjectMapper
 
 @Component
 class HttpAnalysisClient(
@@ -31,7 +31,7 @@ class HttpAnalysisClient(
         // enforce its size limit before reading anything).
         val body = objectMapper.writeValueAsBytes(request)
         try {
-            val result = restClient.post()
+            return restClient.post()
                 .uri(CHANGED_SYMBOLS_PATH)
                 .contentType(MediaType.APPLICATION_JSON)
                 .contentLength(body.size.toLong())
@@ -43,7 +43,6 @@ class HttpAnalysisClient(
                 }
                 .body(body)
                 .exchange { _, response -> interpret(response.statusCode, response.body.readAllBytes()) }
-            return result ?: throw AnalysisUnavailableException("analysis service returned no response")
         } catch (error: ResourceAccessException) {
             // Spring wraps every I/O failure in this: refused connections,
             // timeouts, connections dropped halfway.
@@ -55,7 +54,7 @@ class HttpAnalysisClient(
         if (status.is2xxSuccessful) {
             val response = try {
                 objectMapper.readValue(bytes, ChangedSymbolsResponse::class.java)
-            } catch (error: IOException) {
+            } catch (error: JacksonException) {
                 throw AnalysisUnavailableException("analysis service sent a response that does not match the contract", error)
             }
             return AnalysisResult(response, String(bytes, Charsets.UTF_8))
@@ -63,7 +62,7 @@ class HttpAnalysisClient(
 
         val problem = try {
             objectMapper.readValue(bytes, AnalysisProblem::class.java)
-        } catch (error: IOException) {
+        } catch (error: JacksonException) {
             null
         }
         if (status.is4xxClientError) {

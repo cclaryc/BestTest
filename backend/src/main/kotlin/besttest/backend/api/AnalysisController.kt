@@ -1,7 +1,6 @@
 package besttest.backend.api
 
 import besttest.backend.jobs.AnalysisRunService
-import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.validation.Valid
 import java.net.URI
 import java.util.UUID
@@ -13,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import tools.jackson.databind.ObjectMapper
 
 /**
  * A controller translates between HTTP and the application: it reads the

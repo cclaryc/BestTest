@@ -345,7 +345,7 @@ Gradle your machine has, and CI runs exactly what you run. The Gradle wrapper
 | Decision | Alternative | Why this way |
 | --- | --- | --- |
 | Plain SQL through `JdbcClient` | An ORM (JPA, Hibernate) | Every statement is visible, and the job queue in Milestone 5 depends on `FOR UPDATE SKIP LOCKED`. See `docs/adr/0003`. |
-| Spring Boot 3.5.7 | Spring Boot 4.x, the current line | Code written without a compiler should use the API its author knows exactly. 3.5 is past its free support period, so moving to 4.x is the first follow-up. |
+| Spring Boot 3.5.7 at first | Spring Boot 4.x, the current line | Code written without a compiler should use the API its author knows exactly. Once it built, it was moved to 4.1: see `03b-spring-boot-4.md`. |
 | Result stored as `jsonb`, verbatim | Tables for files and symbols | The backend passes the result on; it does not query inside it yet. Columns hold only what it filters or shows in lists. |
 | Hand-written contract classes, checked by a test | Generated client code | Seven small classes. Generated code is larger than what it replaces and harder to read; the test gives the same protection. |
 | Tests use a PostgreSQL started by Compose | Testcontainers | One fewer library to get right blind. Testcontainers remains the better tool and can replace this later. |
@@ -359,7 +359,6 @@ In `docs/limitations.md`. The main ones:
 - The analysis runs inside the HTTP request. A crash mid-run leaves a row
   marked `running`.
 - No authentication. The port is published on this machine only.
-- Spring Boot 3.5 no longer receives free updates.
 
 ## Questions to be able to answer
 
@@ -382,5 +381,5 @@ In `docs/limitations.md`. The main ones:
 
 ## Next
 
-Move the backend to the current Spring Boot line, now that there is a passing
-build to compare against. Then Milestone 4: the GitHub App.
+The backend has since been moved to the current Spring Boot line:
+`03b-spring-boot-4.md`. Next is Milestone 4, the GitHub App.

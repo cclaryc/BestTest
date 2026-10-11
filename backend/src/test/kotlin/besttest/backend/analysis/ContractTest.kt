@@ -1,13 +1,13 @@
 package besttest.backend.analysis
 
 import besttest.backend.support.Fixtures
-import com.fasterxml.jackson.databind.JsonNode
 import kotlin.reflect.KClass
 import kotlin.reflect.full.primaryConstructor
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import tools.jackson.databind.JsonNode
 
 /**
  * Holds the Kotlin classes in Contract.kt to analysis/openapi.json.
@@ -60,8 +60,8 @@ class ContractTest {
     fun `validation patterns are the ones in the schema`() {
         val revision = schema("Revision").path("properties")
 
-        assertEquals(revision.path("commit").path("pattern").asText(), COMMIT_PATTERN)
-        assertEquals(revision.path("snapshot").path("pattern").asText(), SNAPSHOT_PATTERN)
+        assertEquals(revision.path("commit").path("pattern").asString(), COMMIT_PATTERN)
+        assertEquals(revision.path("snapshot").path("pattern").asString(), SNAPSHOT_PATTERN)
     }
 
     @Test
@@ -105,8 +105,8 @@ class ContractTest {
 
         val json = Fixtures.mapper.readTree(Fixtures.mapper.writeValueAsString(request))
 
-        assertEquals(propertyNames(schema("ChangedSymbolsRequest")), json.fieldNames().asSequence().toSet())
-        assertEquals(propertyNames(schema("Revision")), json.path("base").fieldNames().asSequence().toSet())
+        assertEquals(propertyNames(schema("ChangedSymbolsRequest")), json.propertyNames().toSet())
+        assertEquals(propertyNames(schema("Revision")), json.path("base").propertyNames().toSet())
     }
 
     // --- helpers ----------------------------------------------------------
@@ -128,13 +128,13 @@ class ContractTest {
         return schema
     }
 
-    private fun propertyNames(schema: JsonNode): Set<String> = schema.path("properties").fieldNames().asSequence().toSet()
+    private fun propertyNames(schema: JsonNode): Set<String> = schema.path("properties").propertyNames().toSet()
 
-    private fun requiredNames(schema: JsonNode): Set<String> = schema.path("required").map { it.asText() }.toSet()
+    private fun requiredNames(schema: JsonNode): Set<String> = schema.path("required").values().map { it.asString() }.toSet()
 
     /** Pydantic writes an optional value as `anyOf: [<type>, {"type": "null"}]`. */
     private fun isNullable(property: JsonNode): Boolean =
-        property.path("anyOf").any { it.path("type").asText() == "null" }
+        property.path("anyOf").values().any { it.path("type").asString() == "null" }
 
     private fun snakeCase(name: String): String =
         name.replace(Regex("([a-z0-9])([A-Z])")) { "${it.groupValues[1]}_${it.groupValues[2]}" }.lowercase()
