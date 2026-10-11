@@ -4,19 +4,23 @@ build-backend = "hatchling.build"
 
 [project]
 name = "besttest-analysis"
-version = "0.1.0"
-description = "Static analysis core of BestTest: maps a diff to the functions, methods and classes it changes."
+version = "0.2.0"
+description = "Analysis service of BestTest: maps a diff to the functions, methods and classes it changes."
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "tree-sitter>=0.25,<0.27",
     "tree-sitter-python>=0.25,<0.26",
     "unidiff>=0.7.5,<2",
+    "fastapi>=0.143,<1",
+    "pydantic>=2.14,<3",
+    "uvicorn>=0.54,<1",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest>=8",
+    "httpx2>=2.13",
     "ruff>=0.6",
     "mypy>=1.11",
 ]

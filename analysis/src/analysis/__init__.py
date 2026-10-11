@@ -16,7 +16,7 @@ from analysis.model import (
     Symbol,
     SymbolKind,
 )
-from analysis.symbols.changed import detect_changed_symbols
+from analysis.symbols.changed import Limits, detect_changed_symbols
 
 __all__ = [
     "ChangeKind",
@@ -24,6 +24,7 @@ __all__ = [
     "ChangedSymbol",
     "FileChange",
     "FileStatus",
+    "Limits",
     "Part",
     "SkipReason",
     "Span",
@@ -32,4 +33,4 @@ __all__ = [
     "detect_changed_symbols",
 ]
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"

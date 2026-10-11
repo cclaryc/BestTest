@@ -1,0 +1,41 @@
+spring:
+  application:
+    name: besttest-backend
+  datasource:
+    # Defaults suit a database started with `docker compose up -d postgres`
+    # and published on localhost. The container sets all three explicitly.
+    url: ${BESTTEST_DB_URL:jdbc:postgresql://localhost:5432/besttest}
+    username: ${BESTTEST_DB_USER:besttest}
+    password: ${BESTTEST_DB_PASSWORD:}
+  jackson:
+    # One naming convention across the system: the analysis service and the
+    # GitHub API both use snake_case.
+    property-naming-strategy: SNAKE_CASE
+
+server:
+  port: 8080
+  shutdown: graceful
+
+management:
+  endpoints:
+    web:
+      exposure:
+        # Only health is reachable over HTTP. Actuator has many other
+        # endpoints, and some of them reveal configuration.
+        include: health
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      group:
+        readiness:
+          # Ready means "the database answers". The analysis service is left
+          # out on purpose: if it is down, the backend should stay up and
+          # report failed analyses, not be restarted alongside it.
+          include: readinessState,db
+
+besttest:
+  analysis:
+    base-url: ${BESTTEST_ANALYSIS_URL:http://localhost:8000}
+    connect-timeout: 2s
+    read-timeout: 60s

@@ -1,9 +1,11 @@
 """End-to-end behaviour of change detection on single-file changes."""
 
+import pytest
+
 from analysis.diff import parse_unified_diff
 from analysis.model import MODULE_NAME, ChangeKind, FileStatus, Part, SkipReason, Span
 from analysis.sources import MappingSnapshot
-from analysis.symbols import detect_changed_symbols
+from analysis.symbols import Limits, detect_changed_symbols
 from helpers import PATH, analyse, analyse_file, clean, unified_diff
 
 BASE = """
@@ -373,7 +375,7 @@ def test_file_over_the_size_limit_is_skipped():
         parse_unified_diff(unified_diff(base, head)),
         MappingSnapshot({PATH: base}),
         MappingSnapshot({PATH: head}),
-        max_file_bytes=100,
+        limits=Limits(max_file_bytes=100),
     )
 
     assert change_set.file(PATH).skipped is SkipReason.TOO_LARGE
@@ -420,3 +422,74 @@ def test_json_shape():
             }
         ],
     }
+
+
+# --- limits ---------------------------------------------------------------
+
+
+def three_python_files_and_a_readme():
+    files = ["a.py", "notes.md", "b.py", "c.py"]
+    diff = "".join(unified_diff("x = 1\n", "x = 2\n", path=name) for name in files)
+    base = MappingSnapshot(dict.fromkeys(files, "x = 1\n"))
+    head = MappingSnapshot(dict.fromkeys(files, "x = 2\n"))
+    return parse_unified_diff(diff), base, head
+
+
+def test_file_limit_counts_only_files_that_are_parsed():
+    diffs, base, head = three_python_files_and_a_readme()
+
+    change_set = detect_changed_symbols(diffs, base, head, limits=Limits(max_files=2))
+
+    # The Markdown file is skipped anyway, so it does not use up the allowance.
+    assert [(change.path, change.skipped) for change in change_set] == [
+        ("a.py", None),
+        ("notes.md", SkipReason.UNSUPPORTED_LANGUAGE),
+        ("b.py", None),
+        ("c.py", SkipReason.TOO_MANY_FILES),
+    ]
+    assert not change_set.complete
+
+
+def test_time_budget_stops_between_files():
+    diffs, base, head = three_python_files_and_a_readme()
+    # A fake clock makes the test exact and instant: every reading is one second
+    # after the previous one.
+    readings = iter(range(100))
+
+    change_set = detect_changed_symbols(
+        diffs,
+        base,
+        head,
+        limits=Limits(time_budget_seconds=2.5),
+        clock=lambda: float(next(readings)),
+    )
+
+    assert [change.skipped for change in change_set] == [
+        None,
+        SkipReason.UNSUPPORTED_LANGUAGE,
+        SkipReason.TIME_BUDGET_EXCEEDED,
+        SkipReason.TIME_BUDGET_EXCEEDED,
+    ]
+    assert not change_set.complete
+
+
+def test_result_is_complete_when_only_unanalysable_files_were_skipped():
+    diffs, base, head = three_python_files_and_a_readme()
+
+    change_set = detect_changed_symbols(diffs, base, head)
+
+    assert change_set.complete
+    assert change_set.to_dict()["complete"] is True
+
+
+@pytest.mark.parametrize("limits", [Limits(max_file_bytes=3), Limits(max_files=1)])
+def test_any_limit_that_hides_code_makes_the_result_incomplete(limits):
+    diffs, base, head = three_python_files_and_a_readme()
+
+    assert not detect_changed_symbols(diffs, base, head, limits=limits).complete
+
+
+def test_missing_source_makes_the_result_incomplete():
+    diffs, base, _ = three_python_files_and_a_readme()
+
+    assert not detect_changed_symbols(diffs, base, MappingSnapshot({})).complete

@@ -9,6 +9,11 @@ __pycache__/
 build/
 dist/
 
+# Gradle and Kotlin
+.gradle/
+backend/build/
+.kotlin/
+
 # Secrets and local settings
 .env
 .env.*

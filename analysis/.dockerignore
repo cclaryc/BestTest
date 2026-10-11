@@ -1,0 +1,14 @@
+# Only pyproject.toml, README.md, requirements.lock and src/ are needed to build.
+.venv/
+**/__pycache__/
+**/*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+build/
+dist/
+tests/
+examples/
+scripts/
+openapi.json
+requirements-dev.lock

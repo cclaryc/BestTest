@@ -1,0 +1,102 @@
+{
+  "complete": true,
+  "files": [
+    {
+      "path": "shop/pricing.py",
+      "old_path": null,
+      "status": "modified",
+      "language": "python",
+      "skipped": null,
+      "syntax_errors": false,
+      "symbols": [
+        {
+          "key": "<module>",
+          "qualified_name": "<module>",
+          "kind": "module",
+          "change": "modified",
+          "parts": [
+            "body"
+          ],
+          "base_span": {
+            "start_line": 1,
+            "end_line": 26
+          },
+          "head_span": {
+            "start_line": 1,
+            "end_line": 28
+          },
+          "touched_base_lines": [
+            3
+          ],
+          "touched_head_lines": [
+            3
+          ]
+        },
+        {
+          "key": "clamp",
+          "qualified_name": "clamp",
+          "kind": "function",
+          "change": "cosmetic",
+          "parts": [],
+          "base_span": {
+            "start_line": 6,
+            "end_line": 7
+          },
+          "head_span": {
+            "start_line": 6,
+            "end_line": 8
+          },
+          "touched_base_lines": [],
+          "touched_head_lines": [
+            7
+          ]
+        },
+        {
+          "key": "calculate_discount",
+          "qualified_name": "calculate_discount",
+          "kind": "function",
+          "change": "modified",
+          "parts": [
+            "signature",
+            "body"
+          ],
+          "base_span": {
+            "start_line": 10,
+            "end_line": 15
+          },
+          "head_span": {
+            "start_line": 11,
+            "end_line": 14
+          },
+          "touched_base_lines": [
+            10,
+            12,
+            13,
+            15
+          ],
+          "touched_head_lines": [
+            11,
+            14
+          ]
+        },
+        {
+          "key": "Cart.clear",
+          "qualified_name": "Cart.clear",
+          "kind": "method",
+          "change": "added",
+          "parts": [],
+          "base_span": null,
+          "head_span": {
+            "start_line": 24,
+            "end_line": 25
+          },
+          "touched_base_lines": [],
+          "touched_head_lines": [
+            24,
+            25
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -53,6 +53,24 @@ class SkipReason(StrEnum):
     BINARY = "binary"
     TOO_LARGE = "too_large"
     MISSING_SOURCE = "missing_source"
+    TOO_MANY_FILES = "too_many_files"
+    TIME_BUDGET_EXCEEDED = "time_budget_exceeded"
+
+
+INCOMPLETE_REASONS = frozenset(
+    {
+        SkipReason.TOO_LARGE,
+        SkipReason.MISSING_SOURCE,
+        SkipReason.TOO_MANY_FILES,
+        SkipReason.TIME_BUDGET_EXCEEDED,
+    }
+)
+"""Skips that leave code unexamined.
+
+A binary file or a language without an adapter is outside the analysis by
+design. A file skipped for one of these reasons is code the analysis should have
+looked at and did not, so its changes are unknown.
+"""
 
 
 @dataclass(frozen=True, slots=True, order=True)
@@ -189,5 +207,17 @@ class ChangeSet:
                 return change
         raise KeyError(path)
 
+    @property
+    def complete(self) -> bool:
+        """False when some changed code could not be examined.
+
+        Consumers must treat an incomplete result as "anything may have
+        changed" for the skipped files, never as "nothing else changed".
+        """
+        return not any(change.skipped in INCOMPLETE_REASONS for change in self.files)
+
     def to_dict(self) -> dict[str, Any]:
-        return {"files": [change.to_dict() for change in self.files]}
+        return {
+            "complete": self.complete,
+            "files": [change.to_dict() for change in self.files],
+        }

@@ -13,8 +13,9 @@ then classified by comparing its fingerprint in base and head.
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
-from dataclasses import replace
+import time
+from collections.abc import Callable, Iterable, Mapping
+from dataclasses import dataclass, replace
 
 from analysis.diff.model import FileDiff
 from analysis.model import (
@@ -31,11 +32,25 @@ from analysis.model import (
 from analysis.parsing import AdapterRegistry, LanguageAdapter, default_registry
 from analysis.sources import Snapshot
 
-DEFAULT_MAX_FILE_BYTES = 1_000_000
-
 _REAL_CHANGES = frozenset({ChangeKind.ADDED, ChangeKind.DELETED, ChangeKind.MODIFIED})
 _FUNCTION_KINDS = frozenset({SymbolKind.FUNCTION, SymbolKind.METHOD})
 _PART_ORDER = (Part.DECORATORS, Part.SIGNATURE, Part.BODY, Part.NESTED)
+
+
+@dataclass(frozen=True, slots=True)
+class Limits:
+    """Upper bounds on the work one call may do.
+
+    The input is a diff of someone else's code, so its size is not ours to
+    choose. Each limit turns "this request takes forever" into "these files were
+    skipped, and the result says so".
+    """
+
+    max_file_bytes: int = 1_000_000
+    max_files: int | None = None
+    """How many files to parse. Files that are skipped anyway do not count."""
+    time_budget_seconds: float | None = None
+    """Checked between files, so one call can overrun by one file's parse time."""
 
 
 def detect_changed_symbols(
@@ -44,17 +59,38 @@ def detect_changed_symbols(
     head: Snapshot,
     *,
     adapters: AdapterRegistry | None = None,
-    max_file_bytes: int = DEFAULT_MAX_FILE_BYTES,
+    limits: Limits | None = None,
+    clock: Callable[[], float] = time.monotonic,
 ) -> ChangeSet:
     """Report the symbols each file diff adds, deletes or modifies.
 
     ``base`` and ``head`` must be the two versions the diff was computed between.
-    Files in a language without an adapter are listed but not analysed.
+    Files in a language without an adapter are listed but not analysed. Files
+    left out because a limit was reached are listed with the reason, and the
+    result's ``complete`` flag is then False.
     """
     registry = adapters if adapters is not None else default_registry()
-    return ChangeSet(
-        tuple(_analyse_file(diff, base, head, registry, max_file_bytes) for diff in diffs)
-    )
+    limits = limits if limits is not None else Limits()
+    started = clock()
+    analysed = 0
+    changes: list[FileChange] = []
+
+    for diff in diffs:
+        limit_hit: SkipReason | None = None
+        if limits.max_files is not None and analysed >= limits.max_files:
+            limit_hit = SkipReason.TOO_MANY_FILES
+        elif (
+            limits.time_budget_seconds is not None
+            and clock() - started > limits.time_budget_seconds
+        ):
+            limit_hit = SkipReason.TIME_BUDGET_EXCEEDED
+
+        change = _analyse_file(diff, base, head, registry, limits.max_file_bytes, limit_hit)
+        if change.skipped is None:
+            analysed += 1
+        changes.append(change)
+
+    return ChangeSet(tuple(changes))
 
 
 def _analyse_file(
@@ -63,6 +99,7 @@ def _analyse_file(
     head: Snapshot,
     registry: AdapterRegistry,
     max_file_bytes: int,
+    limit_hit: SkipReason | None,
 ) -> FileChange:
     change = FileChange(
         path=diff.path,
@@ -75,6 +112,8 @@ def _analyse_file(
     if adapter is None:
         return replace(change, skipped=SkipReason.UNSUPPORTED_LANGUAGE)
     change = replace(change, language=adapter.name)
+    if limit_hit is not None:
+        return replace(change, skipped=limit_hit)
 
     base_source = base.read(diff.old_path) if diff.old_path is not None else None
     head_source = head.read(diff.new_path) if diff.new_path is not None else None

@@ -188,9 +188,9 @@ parsing (renames, binary files, quoted paths), symbol extraction (nesting,
 decorators, repeated names, syntax errors), fingerprints (what must and must not
 count as a change), classification (every row of the table above and more),
 path safety, the import direction between packages, and the CLI against a real
-temporary git repository. They pass on Python 3.12 with the oldest supported
-library versions and on 3.13 with the newest, both on Linux. Windows is in the
-CI matrix but has not run yet.
+temporary git repository. They pass on Linux with Python 3.12 and 3.13, and on Windows with Python 3.12
+(110 passed; the symlink test skips itself there, because Windows does not let
+an ordinary user create symlinks).
 
 **Tests of the tests.** A passing suite proves little if it would also pass with
 the code broken. So the code was broken on purpose in 14 ways, one at a time:

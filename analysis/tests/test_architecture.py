@@ -13,6 +13,8 @@ ALLOWED = {
     "parsing": {"model"},
     "symbols": {"model", "diff", "parsing", "sources"},
     "cli": {"model", "diff", "parsing", "sources", "symbols"},
+    # The two front ends are siblings: neither may reach into the other.
+    "api": {"model", "diff", "parsing", "sources", "symbols"},
 }
 
 

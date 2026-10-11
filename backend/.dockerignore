@@ -1,0 +1,7 @@
+# Only the build files and src/ are needed to build the image.
+.gradle/
+build/
+gradle/
+gradlew
+gradlew.bat
+*.md

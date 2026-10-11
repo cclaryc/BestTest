@@ -137,6 +137,8 @@ def _render_text(change_set: ChangeSet) -> str:
             )
         lines.append("")
     lines.append("A added  D deleted  M modified  c cosmetic (comments or layout only)")
+    if not change_set.complete:
+        lines.append("Incomplete: some changed files could not be examined (see 'skipped').")
     return "\n".join(lines)
 
 

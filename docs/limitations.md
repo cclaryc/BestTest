@@ -57,6 +57,71 @@ versions of the repository. If the diff was computed between other versions, the
 touched lines will point at the wrong code. The fingerprint comparison still
 gives the right classification, because it does not depend on the diff.
 
+## Analysis service (Milestone 2)
+
+**No authentication.** Anyone who can reach the port can call the service. It
+listens on loopback by default and is meant to sit on a private network between
+containers. It must not be published to the outside.
+
+**Snapshots must be local directories.** The service reads repository versions
+from a directory it shares with the backend. It cannot fetch code itself.
+
+**One core per process.** Requests run on worker threads, which keeps the
+service responsive but does not make analysis parallel: Python executes one
+thread of Python code at a time. Two large requests in one process each take
+about twice as long. Running several processes fixes this and needs no code
+change.
+
+**The time budget is coarse.** It is checked between files. A request can
+overrun by the time one file takes, which the 1 MB file limit keeps to roughly
+a second.
+
+**No streaming uploads.** A request body must declare its length and fit in
+memory. The default limit is 8 MiB, which bounds the size of diff that can be
+analysed in one call.
+
+**Partial results are possible.** When a limit is reached the response lists
+the skipped files and sets `complete` to false. A caller that ignores the flag
+will treat unexamined code as unchanged.
+
+**The server's own start-up lines are plain text.** Request logs are JSON, but
+the web server's "started" and "shutting down" lines are not.
+
+**No dependency hash checking.** `requirements.lock` pins exact versions, not
+file hashes. A compromised package index could serve a different file under
+the same version.
+
+## Backend (Milestone 3)
+
+**An analysis runs inside the HTTP request.** The caller waits for it. If the
+backend stops while one is in progress, its row stays `running` forever.
+Milestone 5 moves analyses to background jobs that are detected and recovered.
+
+**No authentication.** Anyone who can reach the port can start analyses and
+read results. The port is published on 127.0.0.1 only. Sign-in arrives with the
+GitHub App in Milestone 4.
+
+**The request carries the diff.** `POST /api/analyses` takes a diff and two
+snapshot names directly. That is scaffolding: from Milestone 4 the backend
+fetches both from GitHub and the client only names a pull request.
+
+**The size limit is checked late.** A diff over 6 million characters is refused
+by validation, after the whole body has been read into memory. Nothing caps the
+body before that.
+
+**Spring Boot 3.5 is past its free support period.** It was chosen because the
+first version of the backend was written without a compiler, and that called for
+the API its author knew exactly. Moving to the current 4.x line is the first
+follow-up.
+
+**The contract classes are written by hand.** A test compares them with
+`openapi.json` for field names, required fields, nullability and patterns. It
+does not compare value types (string versus integer), so a type change on the
+Python side would be caught only by the shared response fixture.
+
+**No retries.** A call to the analysis service that times out or is refused
+fails the run at once.
+
 ## Still to come
 
 Later milestones add limits of their own, and this file will say so plainly:

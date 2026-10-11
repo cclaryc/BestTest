@@ -10,14 +10,14 @@ analysis has already established, and every finding must point at real code.
 
 ## Status
 
-Milestone 1 of 21 is done. The project is built in small steps, each with tests
-and a write-up.
+Milestones 1 to 3 of 21 are done. The project is built in small steps, each
+with tests and a write-up.
 
 | # | Milestone | State |
 | --- | --- | --- |
 | 1 | Changed-symbol detection for Python, as a library and CLI | Done |
-| 2 | Analysis service (FastAPI) | Next |
-| 3 | Backend skeleton (Kotlin, Spring Boot, PostgreSQL) | |
+| 2 | Analysis service (FastAPI) with a checked-in API contract and a container image | Done |
+| 3 | Backend skeleton (Kotlin, Spring Boot, PostgreSQL) and one Compose file for the stack | Done |
 | 4 | GitHub App integration | |
 | 5 | Job pipeline with live progress | |
 | 6 | Model review with validated findings | |
@@ -46,19 +46,27 @@ Checked against CPython's own parser on 900 commits of click, requests and
 flask: 107,406 symbols compared, no real change missed. See
 [`benchmarks/changed_symbols`](benchmarks/changed_symbols/README.md).
 
+The same analysis is available over HTTP as `POST /v1/changed-symbols`. The
+contract is [`analysis/openapi.json`](analysis/openapi.json).
+
 ## Repository layout
 
 | Path | Contents |
 | --- | --- |
 | [`analysis/`](analysis/README.md) | Python: parsing, change detection, later graphs, test selection and model calls |
+| [`backend/`](backend/README.md) | Kotlin and Spring Boot: stores analyses, calls the analysis service; later GitHub, sign-in and jobs |
+| `compose.yaml` | Starts PostgreSQL, the analysis service and the backend together |
+| `scripts/` | `doctor.py` checks your machine; `smoke_stack.py` tests the running stack |
 | [`benchmarks/`](benchmarks/changed_symbols/README.md) | Reproducible measurements and their raw results |
-| [`docs/milestones/`](docs/milestones/01-changed-symbols.md) | What each milestone built, how it works and why |
-| [`docs/adr/`](docs/adr/0001-classify-changes-by-fingerprint.md) | Architecture decisions and their trade-offs |
+| [`docs/milestones/`](docs/milestones/) | What each milestone built, how it works and why |
+| [`docs/adr/`](docs/adr/) | Architecture decisions and their trade-offs |
 | [`docs/limitations.md`](docs/limitations.md) | What the analysis cannot do |
 
-The backend, web dashboard and sandbox runner get their own directories in the
+The web dashboard and sandbox runner get their own directories in the
 milestones that introduce them.
 
 ## Getting started
 
-See [`analysis/README.md`](analysis/README.md).
+Run `python scripts/doctor.py` to check your machine. Then see
+[`analysis/README.md`](analysis/README.md) for the analysis service alone, or
+[`backend/README.md`](backend/README.md) for the whole stack.

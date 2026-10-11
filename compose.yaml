@@ -1,0 +1,117 @@
+# The whole system on one machine.
+#
+#   docker compose up --build -d      start everything
+#   docker compose down               stop everything (data is kept)
+#   docker compose down --volumes     stop everything and delete the database
+#
+# Only the backend is reachable from the host, and only from this machine
+# (127.0.0.1). PostgreSQL and the analysis service talk to the backend over a
+# private network and have no published ports.
+
+name: besttest
+
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: besttest
+      POSTGRES_USER: besttest
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Copy .env.example to .env first}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready --username besttest --dbname besttest"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    networks: [internal]
+
+  analysis:
+    build: ./analysis
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    volumes:
+      # Until the backend downloads repositories itself (Milestone 4), the
+      # snapshots are the bundled example: directories `base` and `head`.
+      - ${BESTTEST_SNAPSHOT_DIR:-./analysis/examples/discount}:/snapshots:ro
+    networks: [internal]
+
+  backend:
+    build: ./backend
+    environment:
+      BESTTEST_DB_URL: jdbc:postgresql://postgres:5432/besttest
+      BESTTEST_DB_USER: besttest
+      BESTTEST_DB_PASSWORD: ${POSTGRES_PASSWORD:?Copy .env.example to .env first}
+      BESTTEST_ANALYSIS_URL: http://analysis:8000
+      # One JSON object per log line, like the analysis service.
+      LOGGING_STRUCTURED_FORMAT_CONSOLE: ecs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      analysis:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8080:8080"
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    networks: [internal]
+
+  # --- tests -------------------------------------------------------------
+  #
+  #   docker compose --profile test run --rm backend-test
+  #
+  # Runs the backend's test suite inside the same Gradle image that builds the
+  # production jar, against a throwaway PostgreSQL. Nothing needs to be
+  # installed on the host except Docker.
+
+  postgres-test:
+    profiles: [test]
+    image: postgres:17
+    environment:
+      POSTGRES_DB: besttest_test
+      POSTGRES_USER: besttest_test
+      POSTGRES_PASSWORD: besttest_test
+    # In memory: gone when the container stops, and fast.
+    tmpfs:
+      - /var/lib/postgresql/data
+    ports:
+      # For running the tests from an IDE on the host.
+      - "127.0.0.1:5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready --username besttest_test --dbname besttest_test"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    networks: [internal]
+
+  backend-test:
+    profiles: [test]
+    image: gradle:8.14.3-jdk21
+    working_dir: /repo/backend
+    command: ["gradle", "--no-daemon", "test"]
+    environment:
+      GRADLE_USER_HOME: /home/gradle/.gradle
+      BESTTEST_TEST_DB_URL: jdbc:postgresql://postgres-test:5432/besttest_test
+      BESTTEST_TEST_DB_USER: besttest_test
+      BESTTEST_TEST_DB_PASSWORD: besttest_test
+    volumes:
+      # The whole repository: the tests read analysis/openapi.json and the
+      # shared example, which live outside backend/.
+      - .:/repo
+      # Downloaded libraries survive between runs.
+      - gradle-cache:/home/gradle/.gradle
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+    networks: [internal]
+
+networks:
+  internal:
+
+volumes:
+  postgres-data:
+  gradle-cache:

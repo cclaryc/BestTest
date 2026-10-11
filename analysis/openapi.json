@@ -1,0 +1,553 @@
+{
+  "components": {
+    "schemas": {
+      "ChangeKind": {
+        "enum": [
+          "added",
+          "deleted",
+          "modified",
+          "cosmetic"
+        ],
+        "title": "ChangeKind",
+        "type": "string"
+      },
+      "ChangedSymbol": {
+        "additionalProperties": false,
+        "properties": {
+          "base_span": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LineSpan"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Where it was in base; null if added."
+          },
+          "change": {
+            "$ref": "#/components/schemas/ChangeKind"
+          },
+          "head_span": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LineSpan"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Where it is in head; null if deleted."
+          },
+          "key": {
+            "description": "Identity of the symbol within its file.",
+            "title": "Key",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/SymbolKind"
+          },
+          "parts": {
+            "description": "Which pieces of the definition differ.",
+            "items": {
+              "$ref": "#/components/schemas/Part"
+            },
+            "title": "Parts",
+            "type": "array"
+          },
+          "qualified_name": {
+            "title": "Qualified Name",
+            "type": "string"
+          },
+          "touched_base_lines": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Touched Base Lines",
+            "type": "array"
+          },
+          "touched_head_lines": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Touched Head Lines",
+            "type": "array"
+          }
+        },
+        "required": [
+          "key",
+          "qualified_name",
+          "kind",
+          "change",
+          "parts",
+          "base_span",
+          "head_span",
+          "touched_base_lines",
+          "touched_head_lines"
+        ],
+        "title": "ChangedSymbol",
+        "type": "object"
+      },
+      "ChangedSymbolsRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "base": {
+            "$ref": "#/components/schemas/Revision",
+            "description": "The version the change is measured against."
+          },
+          "diff": {
+            "description": "Unified diff from base to head, as produced by git or GitHub.",
+            "title": "Diff",
+            "type": "string"
+          },
+          "head": {
+            "$ref": "#/components/schemas/Revision",
+            "description": "The version that contains the change."
+          }
+        },
+        "required": [
+          "base",
+          "head",
+          "diff"
+        ],
+        "title": "ChangedSymbolsRequest",
+        "type": "object"
+      },
+      "ChangedSymbolsResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "complete": {
+            "description": "False when a limit stopped some changed code from being examined. Treat the skipped files as if anything in them may have changed.",
+            "title": "Complete",
+            "type": "boolean"
+          },
+          "files": {
+            "items": {
+              "$ref": "#/components/schemas/FileChange"
+            },
+            "title": "Files",
+            "type": "array"
+          }
+        },
+        "required": [
+          "complete",
+          "files"
+        ],
+        "title": "ChangedSymbolsResponse",
+        "type": "object"
+      },
+      "FileChange": {
+        "additionalProperties": false,
+        "properties": {
+          "language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Null when no analyser exists for the file.",
+            "title": "Language"
+          },
+          "old_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Previous path, for renamed files only.",
+            "title": "Old Path"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "skipped": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SkipReason"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Why the file was not analysed, if so."
+          },
+          "status": {
+            "$ref": "#/components/schemas/FileStatus"
+          },
+          "symbols": {
+            "items": {
+              "$ref": "#/components/schemas/ChangedSymbol"
+            },
+            "title": "Symbols",
+            "type": "array"
+          },
+          "syntax_errors": {
+            "description": "True when results for this file are best effort.",
+            "title": "Syntax Errors",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "path",
+          "old_path",
+          "status",
+          "language",
+          "skipped",
+          "syntax_errors",
+          "symbols"
+        ],
+        "title": "FileChange",
+        "type": "object"
+      },
+      "FileStatus": {
+        "enum": [
+          "added",
+          "deleted",
+          "modified",
+          "renamed"
+        ],
+        "title": "FileStatus",
+        "type": "string"
+      },
+      "Health": {
+        "additionalProperties": false,
+        "properties": {
+          "status": {
+            "examples": [
+              "ok"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "version"
+        ],
+        "title": "Health",
+        "type": "object"
+      },
+      "LineSpan": {
+        "additionalProperties": false,
+        "properties": {
+          "end_line": {
+            "description": "Last line, inclusive.",
+            "minimum": 1.0,
+            "title": "End Line",
+            "type": "integer"
+          },
+          "start_line": {
+            "description": "First line, counting from 1.",
+            "minimum": 1.0,
+            "title": "Start Line",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "start_line",
+          "end_line"
+        ],
+        "title": "LineSpan",
+        "type": "object"
+      },
+      "Part": {
+        "description": "The piece of a definition that differs between base and head.",
+        "enum": [
+          "decorators",
+          "signature",
+          "body",
+          "nested"
+        ],
+        "title": "Part",
+        "type": "string"
+      },
+      "Problem": {
+        "additionalProperties": false,
+        "description": "Error body, following RFC 9457 (problem details for HTTP APIs).",
+        "properties": {
+          "code": {
+            "description": "Stable machine-readable identifier of the error.",
+            "title": "Code",
+            "type": "string"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "What went wrong this time.",
+            "title": "Detail"
+          },
+          "errors": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ProblemError"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Errors"
+          },
+          "request_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Quote this when reporting it.",
+            "title": "Request Id"
+          },
+          "status": {
+            "title": "Status",
+            "type": "integer"
+          },
+          "title": {
+            "description": "Short summary that is the same for every occurrence.",
+            "title": "Title",
+            "type": "string"
+          },
+          "type": {
+            "default": "about:blank",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "status",
+          "code"
+        ],
+        "title": "Problem",
+        "type": "object"
+      },
+      "ProblemError": {
+        "additionalProperties": false,
+        "properties": {
+          "location": {
+            "description": "Where in the request the problem is.",
+            "examples": [
+              "body.diff"
+            ],
+            "title": "Location",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "location",
+          "message"
+        ],
+        "title": "ProblemError",
+        "type": "object"
+      },
+      "Revision": {
+        "additionalProperties": false,
+        "description": "One side of a change: which commit it is and where its files are.",
+        "properties": {
+          "commit": {
+            "description": "Full git commit hash, lower-case hex.",
+            "examples": [
+              "9999999999999999999999999999999999999999"
+            ],
+            "pattern": "^[0-9a-f]{40}([0-9a-f]{24})?$",
+            "title": "Commit",
+            "type": "string"
+          },
+          "snapshot": {
+            "description": "Name of a directory under the service's snapshot root that holds one version of the repository. It is a name, never a path.",
+            "examples": [
+              "repo-42-9f2c1ab"
+            ],
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "title": "Snapshot",
+            "type": "string"
+          }
+        },
+        "required": [
+          "commit",
+          "snapshot"
+        ],
+        "title": "Revision",
+        "type": "object"
+      },
+      "SkipReason": {
+        "enum": [
+          "unsupported_language",
+          "binary",
+          "too_large",
+          "missing_source",
+          "too_many_files",
+          "time_budget_exceeded"
+        ],
+        "title": "SkipReason",
+        "type": "string"
+      },
+      "SymbolKind": {
+        "enum": [
+          "module",
+          "class",
+          "function",
+          "method"
+        ],
+        "title": "SymbolKind",
+        "type": "string"
+      }
+    }
+  },
+  "info": {
+    "description": "Stateless analysis stages for the BestTest backend. Internal: it has no authentication and must not be reachable from outside the deployment.",
+    "title": "BestTest analysis service",
+    "version": "0.2.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/healthz": {
+      "get": {
+        "operationId": "healthz_healthz_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Is the process alive?",
+        "tags": [
+          "operations"
+        ]
+      }
+    },
+    "/readyz": {
+      "get": {
+        "operationId": "readyz_readyz_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "503": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The snapshot directory is not available."
+          }
+        },
+        "summary": "Can the service do its job right now?",
+        "tags": [
+          "operations"
+        ]
+      }
+    },
+    "/v1/changed-symbols": {
+      "post": {
+        "operationId": "changed_symbols_v1_changed_symbols_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangedSymbolsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangedSymbolsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "411": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request body has no declared length, or is chunked."
+          },
+          "413": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request body is larger than the service accepts."
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is malformed, or names a snapshot that does not exist."
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The service failed. The body carries a request id to quote."
+          }
+        },
+        "summary": "Which functions, methods and classes does this change touch?",
+        "tags": [
+          "analysis"
+        ]
+      }
+    }
+  }
+}
