@@ -44,6 +44,13 @@ cd backend && ./gradlew test
 | `BESTTEST_DB_USER` | `besttest` | |
 | `BESTTEST_DB_PASSWORD` | empty | |
 | `BESTTEST_ANALYSIS_URL` | `http://localhost:8000` | Where the analysis service is |
+| `BESTTEST_GITHUB_CLIENT_ID` | empty | Client id of your GitHub App. Empty switches the GitHub integration off |
+| `BESTTEST_GITHUB_PRIVATE_KEY_FILE` | empty | Path of the App's private key (`.pem`). Compose sets it to the file in `secrets/` |
+| `BESTTEST_GITHUB_API_URL` | `https://api.github.com` | |
+
+The GitHub App is optional. How to register one and where the key goes:
+`../docs/milestones/04a-github-app-authentication.md`. To check a configured
+stack against the real GitHub: `python scripts/smoke_github.py OWNER/REPO`.
 
 ## Layout
 
@@ -52,10 +59,12 @@ cd backend && ./gradlew test
 | `src/main/kotlin/besttest/backend/api/` | HTTP: controller, request and response shapes, errors, request ids |
 | `src/main/kotlin/besttest/backend/jobs/` | An analysis run: record, storage, the logic that runs one |
 | `src/main/kotlin/besttest/backend/analysis/` | The analysis service's contract and the HTTP client for it |
+| `src/main/kotlin/besttest/backend/github/` | Acting as a GitHub App: key, signed token, access tokens, the HTTP client for GitHub |
 | `src/main/resources/db/migration/` | The database schema, as numbered migrations |
-| `src/test/` | Tests; `support/StubAnalysisServer.kt` stands in for the analysis service |
+| `src/test/` | Tests; `support/StubAnalysisServer.kt` and `support/StubGitHubServer.kt` stand in for the two services the backend calls |
 
-`api` may use `jobs` and `analysis`; `jobs` may use `analysis`; `analysis` uses
-neither. `ArchitectureTest` enforces it.
+`api` may use `jobs`, `analysis` and `github`; `jobs` may use `analysis`;
+`analysis` and `github` use none of the others. `ArchitectureTest` enforces it.
 
-How it works and why: `../docs/milestones/03-backend-skeleton.md`.
+How it works and why: `../docs/milestones/03-backend-skeleton.md` and
+`../docs/milestones/04a-github-app-authentication.md`.

@@ -44,8 +44,17 @@ services:
       BESTTEST_DB_USER: besttest
       BESTTEST_DB_PASSWORD: ${POSTGRES_PASSWORD:?Copy .env.example to .env first}
       BESTTEST_ANALYSIS_URL: http://analysis:8000
+      # GitHub App, optional. With no client id in .env the GitHub integration
+      # is off and everything else works. The private key is read from a file
+      # and is not put in an environment variable, which `docker inspect`
+      # and every child process would be able to see.
+      BESTTEST_GITHUB_CLIENT_ID: ${BESTTEST_GITHUB_CLIENT_ID:-}
+      BESTTEST_GITHUB_PRIVATE_KEY_FILE: /etc/besttest/secrets/github-app.pem
       # One JSON object per log line, like the analysis service.
       LOGGING_STRUCTURED_FORMAT_CONSOLE: ecs
+    volumes:
+      # BESTTEST_SECRETS_DIR lets the key live outside the project folder.
+      - ${BESTTEST_SECRETS_DIR:-./secrets}:/etc/besttest/secrets:ro
     depends_on:
       postgres:
         condition: service_healthy
@@ -104,6 +113,11 @@ services:
       - .:/repo
       # Downloaded libraries survive between runs.
       - gradle-cache:/home/gradle/.gradle
+    tmpfs:
+      # The tests need no real credentials, so they do not get any: an empty
+      # folder covers secrets/. Build tools run a great deal of code that is
+      # not ours, and what they cannot see they cannot leak.
+      - /repo/secrets
     depends_on:
       postgres-test:
         condition: service_healthy

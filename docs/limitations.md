@@ -117,6 +117,39 @@ Python side would be caught only by the shared response fixture.
 **No retries.** A call to the analysis service that times out or is refused
 fails the run at once.
 
+## GitHub App authentication (Milestone 4a)
+
+**The GitHub endpoints have no sign-in.** Anyone who can reach the backend's
+port can ask whether the App sees a given repository, and learn its default
+branch and whether it is private. The port is published on 127.0.0.1 only.
+This must be closed before the backend is reachable from anywhere else, and
+before 4b lets the same callers start analyses of private pull requests.
+
+**"Does not exist" and "not installed" cannot be told apart.** GitHub answers
+404 for both on purpose, and so does the backend.
+
+**The private key is a file on disk.** Whoever can read `secrets/` can act as
+the App. That is acceptable on a developer's machine. A deployment should use
+a key vault that signs without revealing the key.
+
+**Tokens are cached in memory, per process.** A restart forgets them, and two
+backend processes would each request their own.
+
+**A rate limit pauses everything.** When GitHub signals a limit for one
+installation, the backend stops calling GitHub altogether until the time
+given, at most one hour. With one installation that is the same thing. With
+many it is more careful than necessary.
+
+**Only github.com has been considered.** The API address is configurable, but
+nothing has been tried against GitHub Enterprise Server.
+
+**A renamed repository is reported as not accessible.** GitHub answers such a
+request with a redirect, which the backend refuses to follow.
+
+**No retries.** A call to GitHub that times out fails the operation at once.
+The one exception is a cached token that GitHub no longer accepts, which is
+replaced once.
+
 ## Still to come
 
 Later milestones add limits of their own, and this file will say so plainly:

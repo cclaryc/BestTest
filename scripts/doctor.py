@@ -88,6 +88,30 @@ def main() -> int:
         "present" if env_file.is_file() else "missing: copy .env.example to .env",
     )
 
+    # The GitHub App is optional: without it everything except GitHub works.
+    client_id = ""
+    if env_file.is_file():
+        for line in env_file.read_text(encoding="utf-8", errors="replace").splitlines():
+            if line.startswith("BESTTEST_GITHUB_CLIENT_ID="):
+                client_id = line.split("=", 1)[1].strip()
+    key_file = ROOT / "secrets" / "github-app.pem"
+    if not client_id:
+        report("info", "GitHub App", "not configured (optional: see docs/milestones/04a)")
+    elif not key_file.is_file():
+        report("MISSING", "GitHub App", "client id is set, but secrets/github-app.pem is missing")
+    else:
+        first = key_file.read_text(encoding="ascii", errors="replace").lstrip()[:40]
+        looks_right = first.startswith("-----BEGIN RSA PRIVATE KEY-----") or first.startswith(
+            "-----BEGIN PRIVATE KEY-----"
+        )
+        report(
+            "ok" if looks_right else "MISSING",
+            "GitHub App",
+            f"client id {client_id}, private key present"
+            if looks_right
+            else "secrets/github-app.pem is not a private key file from GitHub",
+        )
+
     for port, purpose in ((8080, "backend"), (5433, "test database")):
         free = port_is_free(port)
         report(

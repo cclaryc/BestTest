@@ -18,6 +18,9 @@ backend/build/
 .env
 .env.*
 !.env.example
+# Private keys, wherever they are saved. The secrets/ folder has its own rule.
+*.pem
+*.key
 
 # Editors and operating systems
 .idea/

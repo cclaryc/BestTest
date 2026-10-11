@@ -20,8 +20,9 @@ import org.junit.jupiter.api.Test
 class ArchitectureTest {
     private val allowed: Map<String, Set<String>> = mapOf(
         "analysis" to emptySet(),
+        "github" to emptySet(),
         "jobs" to setOf("analysis"),
-        "api" to setOf("analysis", "jobs"),
+        "api" to setOf("analysis", "github", "jobs"),
     )
 
     @Test

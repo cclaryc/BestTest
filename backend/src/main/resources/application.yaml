@@ -39,3 +39,12 @@ besttest:
     base-url: ${BESTTEST_ANALYSIS_URL:http://localhost:8000}
     connect-timeout: 2s
     read-timeout: 60s
+  github:
+    api-url: ${BESTTEST_GITHUB_API_URL:https://api.github.com}
+    # Optional. With no client id the GitHub integration is switched off and
+    # everything else works. The client id is not a secret. The private key
+    # is, which is why only its location appears here.
+    client-id: ${BESTTEST_GITHUB_CLIENT_ID:}
+    private-key-file: ${BESTTEST_GITHUB_PRIVATE_KEY_FILE:}
+    connect-timeout: 5s
+    read-timeout: 20s

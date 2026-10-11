@@ -2,6 +2,7 @@ package besttest.backend.api
 
 import besttest.backend.support.Fixtures
 import besttest.backend.support.StubAnalysisServer
+import besttest.backend.support.TestDatabase
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -194,6 +195,29 @@ class BackendIntegrationTest {
         assertEquals(404, get("/api/nothing-here").statusCode.value())
     }
 
+    // --- github, when no app is configured ----------------------------------
+
+    @Test
+    fun `without a github app the integration says so and nothing else is affected`() {
+        val status = get("/api/github/app")
+        assertEquals(200, status.statusCode.value())
+        assertFalse(json(status).path("configured").asBoolean())
+        assertTrue(json(status).path("app").isMissingNode)
+
+        val repository = get("/api/github/repositories/octocat/Hello-World")
+        assertEquals(503, repository.statusCode.value())
+        assertEquals("github_not_configured", problem(repository).path("code").asString())
+    }
+
+    @Test
+    fun `a name github would not accept is refused as a bad request`() {
+        for (path in listOf("/api/github/repositories/bad_owner/repo", "/api/github/repositories/owner/bad~repo")) {
+            val response = get(path)
+            assertEquals(400, response.statusCode.value(), path)
+            assertEquals("invalid_request", problem(response).path("code").asString())
+        }
+    }
+
     // --- request ids ------------------------------------------------------
 
     @Test
@@ -292,11 +316,10 @@ class BackendIntegrationTest {
         fun properties(registry: DynamicPropertyRegistry) {
             registry.add("besttest.analysis.base-url") { analysis.baseUrl }
             registry.add("besttest.analysis.read-timeout") { "5s" }
-            registry.add("spring.datasource.url") {
-                System.getenv("BESTTEST_TEST_DB_URL") ?: "jdbc:postgresql://localhost:5433/besttest_test"
-            }
-            registry.add("spring.datasource.username") { System.getenv("BESTTEST_TEST_DB_USER") ?: "besttest_test" }
-            registry.add("spring.datasource.password") { System.getenv("BESTTEST_TEST_DB_PASSWORD") ?: "besttest_test" }
+            // No GitHub App here, whatever the machine running the tests has
+            // in its environment.
+            registry.add("besttest.github.client-id") { "" }
+            TestDatabase.register(registry)
         }
 
         @JvmStatic

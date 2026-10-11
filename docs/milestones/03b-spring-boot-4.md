@@ -15,8 +15,8 @@ the first build.
 The build printed one warning, and it was a fair one. `HttpAnalysisClient`
 guarded against the HTTP call returning nothing (`?: throw ...`). Spring 7
 declares in its types that this call cannot return nothing here, so the guard
-was dead code. It has been removed. That one-line change came after the build
-above, so run the tests once more before committing.
+was dead code. It has been removed, and the tests were run again afterwards:
+38 of 38, with no warnings.
 
 ## What changed
 

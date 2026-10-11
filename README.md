@@ -18,7 +18,8 @@ with tests and a write-up.
 | 1 | Changed-symbol detection for Python, as a library and CLI | Done |
 | 2 | Analysis service (FastAPI) with a checked-in API contract and a container image | Done |
 | 3 | Backend skeleton (Kotlin, Spring Boot, PostgreSQL) and one Compose file for the stack | Done |
-| 4 | GitHub App integration | |
+| 4a | GitHub App authentication: short-lived, read-only tokens per repository | Written, not yet built |
+| 4b | Fetch a pull request from GitHub: diff, merge base and code | |
 | 5 | Job pipeline with live progress | |
 | 6 | Model review with validated findings | |
 | 7 | Web dashboard | |
